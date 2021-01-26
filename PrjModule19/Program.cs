@@ -1,8 +1,8 @@
-﻿using PrimeNumberLib;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using PrimeNumberLib;
 using ThreadState = System.Threading.ThreadState;
 
 namespace PrjModule19
@@ -16,8 +16,8 @@ namespace PrjModule19
             var task1 = Task1(formedArray);
             while (!task1)
             {
-
             }
+
             stopwatch.Stop();
             Console.WriteLine($"Thread 1 completed in {stopwatch.ElapsedMilliseconds}");
 
@@ -26,8 +26,8 @@ namespace PrjModule19
             var task2 = Task2(formedArray);
             while (!task2)
             {
-
             }
+
             stopwatch.Stop();
             Console.WriteLine($"Thread 2 completed in {stopwatch.ElapsedMilliseconds}");
         }
@@ -42,7 +42,6 @@ namespace PrjModule19
 
             foreach (var partedList in splitedLists)
             {
-
                 var subThread = new Thread(() =>
                 {
                     while (true)
@@ -61,11 +60,14 @@ namespace PrjModule19
                 testedThreadArray.Add(subThread);
                 subThread.Start();
             }
-            while (testedThreadArray.FindIndex(t => t.ThreadState != ThreadState.Stopped)!=-1)
+
+            while (testedThreadArray.FindIndex(t => t.ThreadState != ThreadState.Stopped) != -1)
             {
             }
+
             return true;
         }
+
         private static bool Task2(IList<long> testedArray)
         {
             var testedThreadNumber = testedArray.Count / 10;
@@ -77,7 +79,6 @@ namespace PrjModule19
 
             for (var i = 0; i < testedThreadNumber; i++)
                 if (testedArray.Count > 0)
-                {
                     while (testedArray.Count >= 1)
                     {
                         var subThread = new Thread(() =>
@@ -93,29 +94,24 @@ namespace PrjModule19
                                 //    ? $"{number} is prime"
                                 //    : $"{number} isn't prime");
                             }
-
                         });
                         subThread.Start();
                         testedThreadArray.Add(subThread);
                     }
-                }
                 else
                     break;
-
 
 
             while (testedThreadArray.FindIndex(t => t.ThreadState != ThreadState.Stopped) != -1)
             {
             }
+
             return true;
         }
 
         private static IEnumerable<List<T>> SplitList<T>(List<T> list, int nSize)
         {
-            for (var i = 0; i < list.Count; i += nSize)
-            {
-                yield return list.GetRange(i, Math.Min(nSize, list.Count - i));
-            }
+            for (var i = 0; i < list.Count; i += nSize) yield return list.GetRange(i, Math.Min(nSize, list.Count - i));
         }
     }
 }
