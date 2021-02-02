@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace PrimeNumberLib
@@ -26,12 +27,17 @@ namespace PrimeNumberLib
             return true;
         }
 
-        public static List<long> FormArray(long leftLim, long rightLim)
+        public static ConcurrentDictionary<int,long> FormArray(long leftLim, long rightLim)
         {
-            var longList = new List<long>();
+            var longList = new ConcurrentDictionary<int,long>();
+            var pos = 0;
             if (rightLim <= leftLim)
                 throw new ArgumentException("Right limit couldn't be less or equal to left limit");
-            for (var i = leftLim; i < rightLim; i++) longList.Add(i);
+            for (var i = leftLim; i < rightLim; i++)
+            {
+                longList.TryAdd(pos, i);
+                pos++;
+            }
 
             return longList;
         }
