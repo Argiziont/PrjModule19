@@ -2,9 +2,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using ThreadState = System.Threading.ThreadState;
 
 namespace PrjModule19
 {
@@ -12,63 +13,56 @@ namespace PrjModule19
     {
         private static void Main()
         {
-            //var formedArray = PrimeTester.FormArray(0, 100);
-            //var task1 = Task1(formedArray);
-
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             var formedArray = PrimeTester.FormArray(0, 10);
+            Task.WaitAll(Task1(formedArray));
+            stopwatch.Stop();
+            Console.WriteLine($"\nTask 1 taken {stopwatch.ElapsedMilliseconds} ms\n");
+
+            stopwatch.Start();
+            formedArray = PrimeTester.FormArray(0, 10);
             Task.WaitAll(Task2(formedArray));
+            stopwatch.Stop();
+            Console.WriteLine($"\nTask 2 taken {stopwatch.ElapsedMilliseconds} ms\n");
         }
 
-        private static bool Task1(List<long> testedArray)
+        private static Task[] Task1(ConcurrentDictionary<int,long> testedArray)
         {
+
             var parts = testedArray.Count / 10;
-            var splitedLists = SplitList(testedArray, parts);
-            var testedThreadArray = new List<Thread>();
-            object locker = new();
-            var rng = new Random();
+            var splitedLists = SplitList(testedArray.ToList(), parts);
 
-            foreach (var partedList in splitedLists)
+
+            return splitedLists.Select(partedList => Task.Factory.StartNew((() =>
             {
-                var subThread = new Thread(() =>
+                foreach (var (_, value) in partedList)
                 {
-                    while (true)
-                    {
-                        if (partedList.Count == 0)
-                            return;
-
-                        lock (locker)
-                        {
-                            var number = partedList[rng.Next(partedList.Count)];
-                            partedList.Remove(number);
-                            Console.WriteLine(PrimeTester.IsPrime(number)
-                                ? $"{number} is prime"
-                                : $"{number} isn't prime");
-                        }
-                    }
-                });
-                testedThreadArray.Add(subThread);
-                subThread.Start();
-            }
-
-            while (testedThreadArray.FindIndex(t => t.ThreadState != ThreadState.Stopped) != -1)
-            {
-            }
-
-            return true;
+                    Console.WriteLine(PrimeTester.IsPrime(value)
+                        ? $"{value} is prime"
+                        : $"{value} isn't prime");
+                }
+            }))).ToArray();
         }
 
         private static Task[] Task2(ConcurrentDictionary<int, long> testedArray)
         {
             var testedThreadArray = new List<Task>();
+            ThreadPool.SetMaxThreads(testedArray.Count / 10, testedArray.Count / 10);
 
             var rng = new Random();
+            var indexes = new HashSet<int>();
+            while (indexes.Count < testedArray.Count)
+            {
+                indexes.Add(rng.Next(0, testedArray.Count));
+            }
 
             for (var i = 0; i < testedArray.Count; i++)
             {
                 var i1 = i;
                 var subTask = new Task((() =>
                 {
-                    if (!testedArray.TryRemove(i1, out var number)) return;
+                    if (!testedArray.TryRemove(indexes.ToArray()[i1], out var number)) return;
                     Console.WriteLine(PrimeTester.IsPrime(number)
                         ? $"{number} is prime"
                         : $"{number} isn't prime");
